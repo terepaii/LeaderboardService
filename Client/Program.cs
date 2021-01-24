@@ -8,9 +8,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 
-namespace StatsClient
+namespace LeaderboardClient
 {
-    public class Stat
+    public class Row
     {
         public long ClientId {get; set;}
 
@@ -21,17 +21,9 @@ namespace StatsClient
     {
         static HttpClient client = new HttpClient();
 
-        static void ShowStats(List<Stat> stats)
+        static async Task<Uri> CreateRow(Row row)
         {
-            foreach(Stat stat in stats)
-            {
-                Console.WriteLine($"ClientId: {stat.ClientId}\tRating: {stat.Rating}");
-            }
-        }
-
-        static async Task<Uri> CreateStat(Stat stat)
-        {
-            var json = JsonSerializer.Serialize(stat);
+            var json = JsonSerializer.Serialize(row);
             var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await client.PostAsync(client.BaseAddress, stringContent);
             Console.WriteLine($"Client received a HTTP response {(int)response.StatusCode} - {response.ReasonPhrase}");
@@ -39,36 +31,36 @@ namespace StatsClient
             return response.Headers.Location;
         }
 
-        static async Task<Stat> GetStat(long ClientId)
+        static async Task<List<Row>> GetRow(long ClientId)
         {
-            Stat stat = null;
+            List<Row> row = null;
 
             HttpResponseMessage response = await client.GetAsync(client.BaseAddress + $"/{ClientId}"); 
 
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
-                stat = JsonSerializer.Deserialize<Stat>(jsonString);
+                row = JsonSerializer.Deserialize<List<Row>>(jsonString);
             }
-            return stat;
+            return row;
         }
-        static async Task<List<Stat>> GetStats()
+        static async Task<List<Row>> GetRows()
         {
-            List<Stat> stats = null;
+            List<Row> stats = null;
 
             HttpResponseMessage response = await client.GetAsync("");
 
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
-                stats = JsonSerializer.Deserialize<List<Stat>>(jsonString);
+                stats = JsonSerializer.Deserialize<List<Row>>(jsonString);
             } 
             return stats;
         }
 
-        static async Task<bool> Update(long clientId, Stat StatIn)
+        static async Task<bool> Update(long clientId, Row RowIn)
         {
-            var json = JsonSerializer.Serialize(StatIn);
+            var json = JsonSerializer.Serialize(RowIn);
             var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await client.PutAsync(client.BaseAddress, stringContent);
 
@@ -104,16 +96,25 @@ namespace StatsClient
             }
             return Int32.Parse(s);
         }
+
+        static void ShowRows(List<Row> rows)
+        {
+            foreach(Row row in rows)
+            {
+                Console.WriteLine($"ClientId: {row.ClientId}\tRating: {row.Rating}");
+            }
+        }
+
         static async Task RunAsync()
         {
-            client.BaseAddress = new Uri("http://localhost:5000/api/Stats");
+            client.BaseAddress = new Uri("http://localhost:5000/api/Leaderboard");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
             );
 
-            // Stat to write
-            Stat stat = new Stat
+            // Row to write
+            Row row = new Row
             {
                 ClientId = GenerateRandomNDigitNumber(5),
                 Rating = GenerateRandomNDigitNumber(5)
@@ -122,8 +123,8 @@ namespace StatsClient
             // Create
             try
             {
-               Console.WriteLine($"Creating a new stat from client {stat.ClientId} with Rating {stat.Rating}");
-               var uri = await CreateStat(stat);
+               Console.WriteLine($"Creating a new row from client {row.ClientId} with Rating {row.Rating}");
+               var uri = await CreateRow(row);
             }
             catch (Exception e)
             {
@@ -133,9 +134,9 @@ namespace StatsClient
             // Read one
             try
             {
-               Console.WriteLine($"Retrieving the new stat from client {stat.ClientId}");
-               var retrievedStat = await GetStat(stat.ClientId);
-               ShowStats(new List<Stat>{retrievedStat});
+               Console.WriteLine($"Retrieving the new row from client {row.ClientId}");
+               var retrievedRow = await GetRow(row.ClientId);
+               ShowRows(retrievedRow);
             }
             catch (Exception e)
             {
@@ -145,9 +146,9 @@ namespace StatsClient
             // Read all
             try 
             {
-               Console.WriteLine("Getting all stats available");
-               var retrievedStats = await GetStats();
-               ShowStats(retrievedStats); 
+               Console.WriteLine("Getting all rows available");
+               var retrievedRows = await GetRows();
+               ShowRows(retrievedRows); 
             }
             catch (Exception e)
             {
@@ -157,15 +158,23 @@ namespace StatsClient
             // Update
             try
             {
-                Stat updatedStat = new Stat
+                Row updatedRow = new Row
                 {
-                    ClientId = stat.ClientId, 
+                    ClientId = row.ClientId, 
                     Rating = GenerateRandomNDigitNumber(5)
                 };
 
-                Console.WriteLine($"Trying to update rating  of client [{stat.ClientId}] from [{stat.Rating}] to [{updatedStat.Rating}]");
-                var updated = await Update(stat.ClientId, updatedStat);
+                Console.WriteLine($"Trying to update rating  of client [{row.ClientId}] from [{row.Rating}] to [{updatedRow.Rating}]");
+                var updated = await Update(row.ClientId, updatedRow);
 
+                if (updated)
+                {
+                    Console.WriteLine($"Successfully updated row for client [{row.ClientId}]");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to updated row for client [{row.ClientId}]");
+                }
             }
             catch (Exception e)
             {
@@ -175,8 +184,16 @@ namespace StatsClient
             //Delete
             try
             {
-                Console.WriteLine($"Trying to delete stat for client [{stat.ClientId}]");
-                var deleted = await Delete(stat.ClientId);
+                Console.WriteLine($"Trying to delete row for client [{row.ClientId}]");
+                var deleted = await Delete(row.ClientId);
+                if (deleted)
+                {
+                    Console.WriteLine($"Successfully deleted row for client [{row.ClientId}]");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to delete row for client [{row.ClientId}]");
+                }
             }
             catch (Exception e)
             {

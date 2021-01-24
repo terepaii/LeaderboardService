@@ -2,6 +2,7 @@ using LeaderboardApi.Models;
 using LeaderboardApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LeaderboardApi.Controllers
 {
@@ -17,28 +18,37 @@ namespace LeaderboardApi.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Row>> GetAllRows() =>
-            _leaderboardService.Get();
+        public async Task<ActionResult<List<Row>>> GetAllRows() 
+        {
+            var result = await _leaderboardService.Get(null);
+            if (result == null)
+            {
+                return NoContent();
+            }
+            return result;
+        }
+            
 
         [HttpGet("{clientId}")]
-        public ActionResult<Row> GetRow([FromRoute] long clientId)
+        public async Task<ActionResult<List<Row>>> GetRow([FromRoute] long clientId)
         {
-            Row row = _leaderboardService.Get(clientId);
+            var result = await _leaderboardService.Get(clientId);
 
-            if (row == null)
+            if (result == null)
             {
                 return NotFound();
             }
-            return row;
+            return result;
         }
 
         [HttpPost]
-        public IActionResult Post(Row row)
+        public async Task<IActionResult> Post(Row row)
         {
-            Row rowEntry = _leaderboardService.Get(row.ClientId);
+            var result = await _leaderboardService.Get(row.ClientId);
 
-            if (rowEntry == null)
+            if (result.Count == 0)
             {
+                // TODO: Make async
                 _leaderboardService.Create(row);
                 return Ok();
             }
@@ -47,40 +57,41 @@ namespace LeaderboardApi.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Row rowIn)
+        public async Task<IActionResult> Update(Row rowIn)
         {
-            Row row = _leaderboardService.Get(rowIn.ClientId);
+            var result = await _leaderboardService.Get(rowIn.ClientId);
 
-            if (row == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
+            // TODO: Make async
             _leaderboardService.Update(rowIn);
-
-            return NoContent();
+            return Ok();
         }
 
         [HttpDelete("{clientId}")]
-        public IActionResult Delete([FromRoute] long clientId)
+        public async Task<IActionResult> Delete([FromRoute] long clientId)
         {
-            Row row = _leaderboardService.Get(clientId);
+            var row = await _leaderboardService.Get(clientId);
 
             if (row == null)
             {
                 return NotFound();
             }
 
+            // TODO: Make async
             _leaderboardService.Delete(clientId);
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpDelete]
         public IActionResult DeleteAll()
         {
             _leaderboardService.DeleteAll();
-            return NoContent();
+            return Ok();
         }
     }
 }

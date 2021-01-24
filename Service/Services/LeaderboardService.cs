@@ -20,17 +20,31 @@ namespace LeaderboardApi.Services
             _rows = database.GetCollection<Row>(settings.LeaderboardCollectionName);
         }
 
-        public List<Row> Get() =>
-            _rows.Find(row => true).ToList();
+        public async Task<List<Row>> Get(long? clientId)
+        {
+            List<Row> rows = new List<Row>();
 
-        public Row Get(long clientId) =>
-            _rows.Find(row => row.ClientId == clientId).FirstOrDefault();
+            var filter = clientId == null ?                                // Is the client id null?
+                         Builders<Row>.Filter.Eq("", "") :                 // If so, create a filter to retrieve all documents
+                         Builders<Row>.Filter.Eq("ClientId", clientId);    // If not, look for a particular document with the client id
+
+            using (var cursor = await _rows.FindAsync(filter))
+            {
+                while (await cursor.MoveNextAsync())
+                {
+                    var batch = cursor.Current;
+                    foreach (Row row in batch)
+                    {
+                        rows.Add(row);
+                    }
+                }
+            }
+            return rows;   
+        }
 
         public void Create(Row rowIn)
         {
             _rows.InsertOne(rowIn);
-
-             
         }
 
         public void Update(Row rowIn)
