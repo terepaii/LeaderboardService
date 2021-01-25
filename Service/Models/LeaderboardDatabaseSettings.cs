@@ -1,4 +1,4 @@
-namespace LeaderboardApi.Models
+namespace LeaderboardAPI.Models
 {
     public interface ILeaderboardDatabaseSettings
     {

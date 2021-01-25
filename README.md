@@ -3,7 +3,7 @@ Leaderboard Service written in C#
 
 To Do:
 
-* Standardise API controller
+* ~~Standardise API controllers~~
 * MongoDB dockerfile
 * Change to async functions on server
 * Authentication

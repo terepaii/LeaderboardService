@@ -1,12 +1,12 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
-using LeaderboardApi.Models;
+using LeaderboardAPI.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 
-namespace LeaderboardApi.Services
+namespace LeaderboardAPI.Services
 {
     public class LeaderboardService
     {
@@ -42,31 +42,31 @@ namespace LeaderboardApi.Services
             return rows;   
         }
 
-        public void Create(Row rowIn)
+        public async Task Create(Row rowIn)
         {
-            _rows.InsertOne(rowIn);
+            await _rows.InsertOneAsync(rowIn);
         }
 
-        public void Update(Row rowIn)
+        public async Task Update(Row rowIn)
         {
             var filter = Builders<Row>.Filter.Eq("ClientId", rowIn.ClientId);
             var update = Builders<Row>.Update.Set("Rating", rowIn.Rating);
-            _rows.UpdateOne(filter, update);
+            await _rows.UpdateOneAsync(filter, update);
         }
 
-        public void Delete(Row rowIn)
+        public async Task Delete(Row rowIn)
         {
-            _rows.DeleteOne(row => row.ClientId == rowIn.ClientId);
+            await _rows.DeleteOneAsync(row => row.ClientId == rowIn.ClientId);
         }
 
-        public void Delete(long clientId)
+        public async Task Delete(long clientId)
         {
-            _rows.DeleteOne(row => row.ClientId == clientId);
+            await _rows.DeleteOneAsync(row => row.ClientId == clientId);
         }
 
-        public void DeleteAll()
+        public async Task DeleteAll()
         {
-            _rows.DeleteMany(Builders<Row>.Filter.Empty);
+            await _rows.DeleteManyAsync(Builders<Row>.Filter.Empty);
         }
     }
 }

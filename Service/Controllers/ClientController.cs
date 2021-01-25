@@ -1,18 +1,18 @@
-using LeaderboardApi.Models;
-using LeaderboardApi.Services;
+using LeaderboardAPI.Models;
+using LeaderboardAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace LeaderboardApi.Controllers
+namespace LeaderboardAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LeaderboardController : ControllerBase
+    public class ClientController : ControllerBase
     {
         private readonly LeaderboardService _leaderboardService;
 
-        public LeaderboardController(LeaderboardService leaderboardService)
+        public ClientController(LeaderboardService leaderboardService)
         {
             _leaderboardService = leaderboardService;
         }
@@ -48,8 +48,7 @@ namespace LeaderboardApi.Controllers
 
             if (result.Count == 0)
             {
-                // TODO: Make async
-                _leaderboardService.Create(row);
+                await _leaderboardService.Create(row);
                 return Ok();
             }
 
@@ -66,8 +65,7 @@ namespace LeaderboardApi.Controllers
                 return NotFound();
             }
 
-            // TODO: Make async
-            _leaderboardService.Update(rowIn);
+            await _leaderboardService.Update(rowIn);
             return Ok();
         }
 
@@ -81,16 +79,7 @@ namespace LeaderboardApi.Controllers
                 return NotFound();
             }
 
-            // TODO: Make async
-            _leaderboardService.Delete(clientId);
-
-            return Ok();
-        }
-
-        [HttpDelete]
-        public IActionResult DeleteAll()
-        {
-            _leaderboardService.DeleteAll();
+            await _leaderboardService.Delete(clientId);
             return Ok();
         }
     }

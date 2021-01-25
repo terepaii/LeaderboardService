@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 
-namespace LeaderboardApi.Models
+namespace LeaderboardAPI.Models
 {
     public class Row
     {
