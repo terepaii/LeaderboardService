@@ -4,13 +4,15 @@ Leaderboard Service written in C#
 To Do:
 
 * ~~Standardise API controllers~~
+* ~~Change to async functions on server~~
 * MongoDB dockerfile
-* Change to async functions on server
 * Authentication
-* Logging
+* ELK stack
+* Metrics
 * Indexes
 * Interfaces
 * DI
 * Redis backend
 * Add Unit Tests
+* Authentication to mongo
 * Terminating Proxy
