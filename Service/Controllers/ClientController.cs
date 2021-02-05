@@ -1,8 +1,10 @@
-using LeaderboardAPI.Models;
-using LeaderboardAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using LeaderboardAPI.Interfaces;
+using LeaderboardAPI.Models;
+using LeaderboardAPI.Services;
 
 namespace LeaderboardAPI.Controllers
 {
@@ -10,15 +12,15 @@ namespace LeaderboardAPI.Controllers
     [ApiController]
     public class ClientController : ControllerBase
     {
-        private readonly LeaderboardService _leaderboardService;
+        private readonly ILeaderboardService _leaderboardService;
 
-        public ClientController(LeaderboardService leaderboardService)
+        public ClientController(ILeaderboardService leaderboardService)
         {
             _leaderboardService = leaderboardService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Row>>> GetAllRows() 
+        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetAllRows() 
         {
             var result = await _leaderboardService.Get(null);
             if (result == null)
@@ -30,7 +32,7 @@ namespace LeaderboardAPI.Controllers
             
 
         [HttpGet("{clientId}")]
-        public async Task<ActionResult<List<Row>>> GetRow([FromRoute] long clientId)
+        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetRow([FromRoute] long clientId)
         {
             var result = await _leaderboardService.Get(clientId);
 
@@ -42,7 +44,7 @@ namespace LeaderboardAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Row row)
+        public async Task<IActionResult> Post(LeaderboardRowDTO row)
         {
             var result = await _leaderboardService.Get(row.ClientId);
 
@@ -56,7 +58,7 @@ namespace LeaderboardAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Row rowIn)
+        public async Task<IActionResult> Update(LeaderboardRowDTO rowIn)
         {
             var result = await _leaderboardService.Get(rowIn.ClientId);
 

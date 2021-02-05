@@ -1,72 +1,52 @@
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using LeaderboardAPI.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using LeaderboardAPI.Interfaces;
+using LeaderboardAPI.Models;
 
 namespace LeaderboardAPI.Services
 {
-    public class LeaderboardService
+    public class LeaderboardService : ILeaderboardService
     {
-        private readonly IMongoCollection<Row> _rows;
+        private readonly IDatabase _data;
 
-        public LeaderboardService(ILeaderboardDatabaseSettings settings)
+        public LeaderboardService(IDatabase data)
         {
-            var client = new MongoClient(settings.ConnectionString);
-            var database = client.GetDatabase(settings.DatabaseName);
-            
-            _rows = database.GetCollection<Row>(settings.LeaderboardCollectionName);
+            _data = data;
         }
 
-        public async Task<List<Row>> Get(long? clientId)
+        public async Task<List<LeaderboardRowDTO>> Get(long? clientId)
         {
-            List<Row> rows = new List<Row>();
-
-            var filter = clientId == null ?                                // Is the client id null?
-                         Builders<Row>.Filter.Eq("", "") :                 // If so, create a filter to retrieve all documents
-                         Builders<Row>.Filter.Eq("ClientId", clientId);    // If not, look for a particular document with the client id
-
-            using (var cursor = await _rows.FindAsync(filter))
-            {
-                while (await cursor.MoveNextAsync())
-                {
-                    var batch = cursor.Current;
-                    foreach (Row row in batch)
-                    {
-                        rows.Add(row);
-                    }
-                }
-            }
-            return rows;   
+            return await _data.Get(clientId);
         }
 
-        public async Task Create(Row rowIn)
+        public async Task Create(LeaderboardRowDTO rowIn)
         {
-            await _rows.InsertOneAsync(rowIn);
+            await _data.Create(rowIn);
         }
 
-        public async Task Update(Row rowIn)
+        public async Task Update(LeaderboardRowDTO rowIn)
         {
-            var filter = Builders<Row>.Filter.Eq("ClientId", rowIn.ClientId);
-            var update = Builders<Row>.Update.Set("Rating", rowIn.Rating);
-            await _rows.UpdateOneAsync(filter, update);
+            await _data.Update(rowIn);
         }
 
-        public async Task Delete(Row rowIn)
+        public async Task Delete(LeaderboardRowDTO rowIn)
         {
-            await _rows.DeleteOneAsync(row => row.ClientId == rowIn.ClientId);
+            await _data.Delete(rowIn);
         }
 
         public async Task Delete(long clientId)
         {
-            await _rows.DeleteOneAsync(row => row.ClientId == clientId);
+            await _data.Delete(clientId);
         }
 
         public async Task DeleteAll()
         {
-            await _rows.DeleteManyAsync(Builders<Row>.Filter.Empty);
+            await _data.DeleteAll();
         }
     }
 }

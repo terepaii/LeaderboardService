@@ -5,7 +5,7 @@ To Do:
 
 * ~~Standardise API controllers~~
 * ~~Change to async functions on server~~
-* MongoDB dockerfile
+* ~~MongoDB dockerfile~~
 * Authentication
 * ELK stack
 * Metrics

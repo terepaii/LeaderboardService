@@ -1,6 +1,8 @@
-using LeaderboardAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+
+using LeaderboardAPI.Interfaces;
+
 
 namespace LeaderboardAPI.Controllers
 {
@@ -8,9 +10,9 @@ namespace LeaderboardAPI.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly LeaderboardService _leaderboardService;
+        private readonly ILeaderboardService _leaderboardService;
 
-        public AdminController(LeaderboardService leaderboardService)
+        public AdminController(ILeaderboardService leaderboardService)
         {
             _leaderboardService = leaderboardService;
         }

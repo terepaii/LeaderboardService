@@ -5,6 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using System.Collections.Generic;
+
+using LeaderboardAPI.Data;
+using LeaderboardAPI.Interfaces;
 using LeaderboardAPI.Models;
 using LeaderboardAPI.Services;
 
@@ -23,15 +27,16 @@ namespace LeaderboardAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            IConfigurationSection MongoDBSettings = Configuration.GetSection("LeaderboardDatabaseSettings:MongoDB");
             // Configuration 
-            services.Configure<LeaderboardDatabaseSettings>(
-                Configuration.GetSection(nameof(LeaderboardDatabaseSettings)));
-                
-            services.AddSingleton<ILeaderboardDatabaseSettings>(sp =>
-                sp.GetRequiredService<IOptions<LeaderboardDatabaseSettings>>().Value);
+            services.AddSingleton<LeaderboardMongoDBSettings>();
+            services.Configure<LeaderboardMongoDBSettings>(MongoDBSettings);
+
+            // Add Database
+            services.AddSingleton<IDatabase, LeaderboardDatabaseMongoDB>();
 
             // Add the leaderboard service
-            services.AddSingleton<LeaderboardService>();
+            services.AddSingleton<ILeaderboardService, LeaderboardService>();
 
             services.AddControllers()
                 .AddNewtonsoftJson(options => options.UseMemberCasing());;
