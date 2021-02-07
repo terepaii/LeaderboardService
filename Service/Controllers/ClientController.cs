@@ -23,7 +23,7 @@ namespace LeaderboardAPI.Controllers
         public async Task<ActionResult<List<LeaderboardRowDTO>>> GetAllRows() 
         {
             var result = await _leaderboardService.Get(null);
-            if (result == null)
+            if (result.Count == 0)
             {
                 return NoContent();
             }
@@ -36,9 +36,9 @@ namespace LeaderboardAPI.Controllers
         {
             var result = await _leaderboardService.Get(clientId);
 
-            if (result == null)
+            if (result.Count == 0)
             {
-                return NotFound();
+                return NoContent();
             }
             return result;
         }
@@ -62,7 +62,7 @@ namespace LeaderboardAPI.Controllers
         {
             var result = await _leaderboardService.Get(rowIn.ClientId);
 
-            if (result == null)
+            if (result.Count == 0)
             {
                 return NotFound();
             }

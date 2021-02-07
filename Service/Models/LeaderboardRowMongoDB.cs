@@ -25,7 +25,7 @@ namespace LeaderboardAPI.Models
         public LeaderboardRowMongoDB(LeaderboardRowDTO rowIn)
         {
             ClientId = rowIn.ClientId;
-            Rating = rowIn.ClientId;
+            Rating = rowIn.Rating;
         }
     }
 }

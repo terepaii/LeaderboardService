@@ -6,12 +6,15 @@ To Do:
 * ~~Standardise API controllers~~
 * ~~Change to async functions on server~~
 * ~~MongoDB dockerfile~~
-* Authentication
+* Authentication (Separate Service)
 * ELK stack
 * Metrics
-* Indexes
-* Interfaces
-* DI
+* ~~Indexes~~
+* Connection Poolimg
+* Add startup script
+* Write to Specific Leaderboard
+* ~~Interfaces~~
+* ~~DI~~
 * Redis backend
 * Add Unit Tests
 * Authentication to mongo

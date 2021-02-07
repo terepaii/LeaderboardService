@@ -19,8 +19,10 @@ namespace LeaderboardAPI.Data
             _settings = options.Value;
             var client = new MongoClient(_settings.ConnectionString);
             var database = client.GetDatabase(_settings.DatabaseName);
-
             _rows = database.GetCollection<LeaderboardRowMongoDB>(_settings.LeaderboardCollectionName);
+
+            var _key = Builders<LeaderboardRowMongoDB>.IndexKeys.Descending("Rating");
+            _rows.Indexes.CreateOne(new CreateIndexModel<LeaderboardRowMongoDB>(_key));
         }
 
         public async Task<List<LeaderboardRowDTO>> Get(long? clientId)
@@ -28,10 +30,17 @@ namespace LeaderboardAPI.Data
             List<LeaderboardRowDTO> rows = new List<LeaderboardRowDTO>();
 
             var filter = clientId == null ?                                                  // Is the client id null?
-                         Builders<LeaderboardRowMongoDB>.Filter.Empty :                 // If so, create a filter to retrieve all documents
+                         Builders<LeaderboardRowMongoDB>.Filter.Empty :                      // If so, create a filter to retrieve all documents
                          Builders<LeaderboardRowMongoDB>.Filter.Eq("ClientId", clientId);    // If not, look for a particular document with the client id
 
-            using (var cursor = await _rows.FindAsync(filter))
+            
+            // Always return results sorted in descending order
+            var sortOption = new FindOptions<LeaderboardRowMongoDB>
+            {
+                Sort = Builders<LeaderboardRowMongoDB>.Sort.Descending("Rating")
+            };
+
+            using (var cursor = await _rows.FindAsync(filter, sortOption))
             {
                 while (await cursor.MoveNextAsync())
                 {
