@@ -1,6 +1,9 @@
 # LeaderboardService
 Leaderboard Service written in C#
 
+![Status](https://github.com/terepaii/LeaderboardService/workflows/.NET/badge.svg)
+
+
 To Do:
 
 * ~~Standardise API controllers~~
