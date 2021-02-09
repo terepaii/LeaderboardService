@@ -46,6 +46,11 @@ namespace LeaderboardAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(LeaderboardRowDTO row)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var result = await _leaderboardService.Get(row.ClientId);
 
             if (result.Count == 0)
@@ -74,9 +79,9 @@ namespace LeaderboardAPI.Controllers
         [HttpDelete("{clientId}")]
         public async Task<IActionResult> Delete([FromRoute] long clientId)
         {
-            var row = await _leaderboardService.Get(clientId);
+            var result = await _leaderboardService.Get(clientId);
 
-            if (row == null)
+            if (result.Count == 0)
             {
                 return NotFound();
             }
