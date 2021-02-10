@@ -18,8 +18,11 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: cd Service; dotnet restore
+      run: dotnet restore
+      working-directory: ./Service
     - name: Build
-      run: cd Service; dotnet build --no-restore
+      run: dotnet build --no-restore
+      working-directory: ./Service
     - name: Test
-      run: cd Test; dotnet test --no-build --verbosity normal
+      run: dotnet test --verbosity normal
+      working-directory: ./Test
