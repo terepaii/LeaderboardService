@@ -20,5 +20,6 @@ To Do:
 * ~~DI~~
 * Redis backend
 * Add Unit Tests
+* Integration Tests
 * Authentication to mongo
 * Terminating Proxy
