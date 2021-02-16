@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using System.Collections.Generic;
 
 using LeaderboardAPI.Data;
@@ -61,6 +62,21 @@ namespace LeaderboardAPI
             app.UseRouting();
 
             //app.UseAuthorization();
+
+             // Metric to count request for each endpoint
+            var counter = Metrics.CreateCounter("api_path_counter", "Count requests to the API endpoints", new CounterConfiguration
+            {
+                LabelNames = new[] { "method", "endpoint" }
+            });
+
+            app.Use((context, next) =>
+            {
+                counter.WithLabels(context.Request.Method, context.Request.Path).Inc();
+                return next();
+            });
+            // Use the Prometheus middleware
+            app.UseMetricServer();
+            app.UseHttpMetrics();
 
             app.UseEndpoints(endpoints =>
             {

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using LeaderboardAPI.Interfaces;
-using LeaderboardAPI.Models;
-using LeaderboardAPI.Services;
 
 namespace LeaderboardAPI.Controllers
 {
