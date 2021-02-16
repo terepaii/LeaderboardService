@@ -1,0 +1,39 @@
+version: '3.8'
+
+services: 
+
+    leaderboardapi:
+      build: .
+      ports:
+        - 8080:80
+
+    mongo:
+      image: mongo
+      restart: always
+      volumes:
+        - ~/data:/data/db
+      ports:
+        - 27017:27017
+
+    mongo-express:
+      image: mongo-express
+      restart: always
+      ports: 
+        - 8081:8081
+
+    prometheus:
+      image: prom/prometheus
+      restart: always
+      ports:
+        - 9090:9090
+      volumes:
+        - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+    grafana:
+      image: grafana/grafana
+      restart: always
+      environment:
+        - GF_SECURITY_ADMIN_USER="${GF_SECURITY_ADMIN_USER}"
+        - GF_SECURITY_ADMIN_PASSWORD="${GF_SECURITY_ADMIN_PASSWORD}"
+      ports:
+        - 3000:3000
