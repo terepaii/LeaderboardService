@@ -107,7 +107,7 @@ namespace LeaderboardClient
 
         static async Task RunAsync()
         {
-            client.BaseAddress = new Uri("http://localhost:5000/api/Client");
+            client.BaseAddress = new Uri("http://localhost:8080/api/Client");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
