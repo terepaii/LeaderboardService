@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Serilog;
 
 using LeaderboardAPI.Interfaces;
+using static Utility;
 
 namespace LeaderboardAPI.Controllers
 {
@@ -23,6 +25,7 @@ namespace LeaderboardAPI.Controllers
             var result = await _leaderboardService.Get(null);
             if (result.Count == 0)
             {
+                Log.Debug($"No rows returned for {Utility.GetFunctionName()}");
                 return NoContent();
             }
             return result;
