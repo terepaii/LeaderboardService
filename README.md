@@ -4,7 +4,8 @@ Leaderboard Service written in C#
 ![Status](https://github.com/terepaii/LeaderboardService/workflows/.NET/badge.svg)
 
 ## Requirements
-- Docker 3.1.0
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker-Compose](https://docs.docker.com/compose/install/)
 
 ## Setup
 ### Docker Network
