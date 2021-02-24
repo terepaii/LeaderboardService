@@ -6,6 +6,8 @@ services:
       build: .
       ports:
         - 8080:80
+      networks: 
+        - logging
 
     mongo:
       image: mongo
@@ -39,3 +41,7 @@ services:
         - 3000:3000
       volumes: 
         - ./grafana-storage:/var/lib/grafana
+networks: 
+  logging:
+    external: 
+      name: logging

@@ -1,0 +1,3 @@
+[submodule "Service/docker-elk"]
+	path = Service/docker-elk
+	url = https://github.com/deviantony/docker-elk
