@@ -2,12 +2,24 @@ version: '3.8'
 
 services: 
 
+    reverse_proxy:
+      image: nginx
+      ports:
+        - 80:80
+        - 443:443
+      volumes:
+        - ./config/nginx:/etc/nginx
+        - ./certs:/etc/ssl/private
+      networks: 
+        - backend
+
     leaderboardapi:
       build: .
       ports:
         - 8080:80
       networks: 
         - logging
+        - backend
 
     mongo:
       image: mongo
@@ -16,12 +28,16 @@ services:
         - ~/data:/data/db
       ports:
         - 27017:27017
+      networks: 
+        - backend
 
     mongo-express:
       image: mongo-express
       restart: always
       ports: 
         - 8081:8081
+      networks: 
+        - backend
 
     prometheus:
       image: prom/prometheus
@@ -30,6 +46,8 @@ services:
         - 9090:9090
       volumes:
         - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      networks: 
+        - backend
 
     grafana:
       image: grafana/grafana
@@ -41,7 +59,10 @@ services:
         - 3000:3000
       volumes: 
         - ./grafana-storage:/var/lib/grafana
+      networks: 
+        - backend
 networks: 
   logging:
     external: 
       name: logging
+  backend: {}
