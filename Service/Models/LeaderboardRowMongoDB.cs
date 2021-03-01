@@ -2,7 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
-
+using System; 
 using LeaderboardAPI.Interfaces;
 
 namespace LeaderboardAPI.Models
@@ -15,7 +15,7 @@ namespace LeaderboardAPI.Models
         [Required]
         [BsonElement("ClientId")]
         [JsonProperty("ClientId")]
-        public long ClientId {get; set;}
+        public Guid ClientId {get; set;}
 
         [Required]
         [BsonElement("Rating")]

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,7 +11,7 @@ namespace LeaderboardClient
 {
     public class Row
     {
-        public long ClientId {get; set;}
+        public Guid ClientId {get; set;}
 
         public long Rating {get; set;}
 
@@ -31,7 +30,7 @@ namespace LeaderboardClient
             return response.Headers.Location;
         }
 
-        static async Task<List<Row>> GetRow(long ClientId)
+        static async Task<List<Row>> GetRow(Guid ClientId)
         {
             List<Row> row = null;
 
@@ -58,7 +57,7 @@ namespace LeaderboardClient
             return stats;
         }
 
-        static async Task<bool> Update(long clientId, Row RowIn)
+        static async Task<bool> Update(Guid clientId, Row RowIn)
         {
             var json = JsonSerializer.Serialize(RowIn);
             var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
@@ -71,7 +70,7 @@ namespace LeaderboardClient
             return false;
         }
 
-        static async Task<bool> Delete(long clientId)
+        static async Task<bool> Delete(Guid clientId)
         {
             HttpResponseMessage response = await client.DeleteAsync(client.BaseAddress + $"/{clientId}");
 
@@ -107,7 +106,7 @@ namespace LeaderboardClient
 
         static async Task RunAsync()
         {
-            client.BaseAddress = new Uri("http://localhost:8080/api/Client");
+            client.BaseAddress = new Uri("http://localhost/api/Client");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
@@ -116,7 +115,7 @@ namespace LeaderboardClient
             // Row to write
             Row row = new Row
             {
-                ClientId = GenerateRandomNDigitNumber(5),
+                ClientId = Guid.NewGuid(),
                 Rating = GenerateRandomNDigitNumber(5)
             };
 

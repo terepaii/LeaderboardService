@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,15 +20,15 @@ namespace Test
             leaderboardService.Setup(m => m.Get(null)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()
             {
                 new LeaderboardRowDTO{
-                    ClientId = 1,
+                    ClientId = Guid.NewGuid(),
                     Rating = 2
                 },
                 new LeaderboardRowDTO {
-                    ClientId = 2,
+                    ClientId = Guid.NewGuid(),
                     Rating = 2
                 },
                 new LeaderboardRowDTO {
-                    ClientId = 3,
+                    ClientId = Guid.NewGuid(),
                     Rating = 3
                 }
             }));

@@ -12,11 +12,13 @@ services:
         - ./certs:/etc/ssl/private
       networks: 
         - backend
+        - loadtest
 
     leaderboardapi:
       build: .
       ports:
-        - 8080:80
+        - 8080:8080 
+        - 4433:4433
       networks: 
         - logging
         - backend
@@ -65,4 +67,7 @@ networks:
   logging:
     external: 
       name: logging
+  loadtest:
+    external:
+      name: loadtest
   backend: {}
