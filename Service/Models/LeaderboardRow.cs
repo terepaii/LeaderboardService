@@ -1,12 +1,12 @@
+using System;
+using System.Runtime.InteropServices;
 using System.ComponentModel.DataAnnotations;
 
 namespace LeaderboardAPI.Interfaces
 {
     public class LeaderboardRowDTO
     {
-        [Required]
-        [Range(1, long.MaxValue, ErrorMessage = "Invalid ClientId supplied")]
-        public virtual long ClientId {get; set;}
+        public virtual Guid ClientId {get; set;}
 
         [Required]
         [Range(1, long.MaxValue, ErrorMessage = "Invalid rating supplied")]

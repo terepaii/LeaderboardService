@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Serilog;
@@ -33,7 +34,7 @@ namespace LeaderboardAPI.Controllers
             
 
         [HttpGet("{clientId}")]
-        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetRow([FromRoute] long clientId)
+        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetRow([FromRoute] Guid clientId)
         {
             var result = await _leaderboardService.Get(clientId);
 
@@ -78,7 +79,7 @@ namespace LeaderboardAPI.Controllers
         }
 
         [HttpDelete("{clientId}")]
-        public async Task<IActionResult> Delete([FromRoute] long clientId)
+        public async Task<IActionResult> Delete([FromRoute] Guid clientId)
         {
             var result = await _leaderboardService.Get(clientId);
 

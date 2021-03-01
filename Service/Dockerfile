@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:5.0
-ENV ASPNETCORE_URLS=http://+:80/
+ENV ASPNETCORE_URLS="http://+:80/;https://+:443/"
 
 WORKDIR /app
 

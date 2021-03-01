@@ -1,12 +1,8 @@
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using LeaderboardAPI.Interfaces;
-using LeaderboardAPI.Models;
 
 namespace LeaderboardAPI.Services
 {
@@ -19,7 +15,7 @@ namespace LeaderboardAPI.Services
             _data = data;
         }
 
-        public async Task<List<LeaderboardRowDTO>> Get(long? clientId)
+        public async Task<List<LeaderboardRowDTO>> Get(Guid? clientId)
         {
             return await _data.Get(clientId);
         }
@@ -39,7 +35,7 @@ namespace LeaderboardAPI.Services
             await _data.Delete(rowIn);
         }
 
-        public async Task Delete(long clientId)
+        public async Task Delete(Guid clientId)
         {
             await _data.Delete(clientId);
         }
