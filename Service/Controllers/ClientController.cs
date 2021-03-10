@@ -21,25 +21,28 @@ namespace LeaderboardAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetAllRows() 
+        [Route("{clientId}/{leaderboardId}")]
+        public async Task<ActionResult<LeaderboardRowDTO>> Get([FromRoute] Guid clientId, [FromRoute] short leaderboardId)
         {
-            var result = await _leaderboardService.Get(null);
-            if (result.Count == 0)
+            var result = await _leaderboardService.Get(clientId, leaderboardId);
+
+            if (result == null)
             {
                 Log.Debug($"No rows returned for {Utility.GetFunctionName()}");
                 return NoContent();
             }
+
             return result;
         }
-            
 
-        [HttpGet("{clientId}")]
-        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetRow([FromRoute] Guid clientId)
+        [HttpGet]
+        [Route("{leaderboardId}")]
+        public async Task<ActionResult<List<LeaderboardRowDTO>>> GetRowsPaginated([FromRoute] short leaderboardId, [FromQuery] int offset=0, [FromQuery] int limit=10) 
         {
-            var result = await _leaderboardService.Get(clientId);
-
+            var result = await _leaderboardService.GetRowsPaginated(leaderboardId, offset, limit);
             if (result.Count == 0)
             {
+                Log.Debug($"No rows returned for {Utility.GetFunctionName()}");
                 return NoContent();
             }
             return result;
@@ -53,42 +56,45 @@ namespace LeaderboardAPI.Controllers
                 return BadRequest();
             }
 
-            var result = await _leaderboardService.Get(row.ClientId);
+            // TODO Move to service layer
+            var result = await _leaderboardService.Get(row.ClientId, row.LeaderboardId);
 
-            if (result.Count == 0)
+            if (result == null)
             {
                 await _leaderboardService.Create(row);
                 return Ok();
             }
 
-            return Conflict(new { message = $"An existing enttry with from client {row.ClientId} was found" });
+            return Conflict(new { message = $"An existing entry with from client [{row.ClientId}] on leaderboard [{row.LeaderboardId}] was found" });
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(LeaderboardRowDTO rowIn)
+        public async Task<IActionResult> Update(LeaderboardRowDTO row)
         {
-            var result = await _leaderboardService.Get(rowIn.ClientId);
+            // TODO Move to service layer
+            var result = await _leaderboardService.Get(row.ClientId, row.LeaderboardId);
 
-            if (result.Count == 0)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            await _leaderboardService.Update(rowIn);
+            await _leaderboardService.Update(row);
             return Ok();
         }
 
-        [HttpDelete("{clientId}")]
-        public async Task<IActionResult> Delete([FromRoute] Guid clientId)
+        [HttpDelete("{clientId}/{leaderboardId}")]
+        public async Task<IActionResult> Delete([FromRoute] Guid clientId, short leaderboardId)
         {
-            var result = await _leaderboardService.Get(clientId);
+            // TODO Move to service layer
+            var result = await _leaderboardService.Get(clientId, leaderboardId);
 
-            if (result.Count == 0)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            await _leaderboardService.Delete(clientId);
+            await _leaderboardService.Delete(clientId, leaderboardId);
             return Ok();
         }
     }

@@ -17,21 +17,14 @@ namespace Test
         public void DeleteAllLeaderboardRowsTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
-            leaderboardService.Setup(m => m.Get(null)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()
-            {
+            var clientId = Guid.NewGuid();
+            short leaderboardId = 1;
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult(
                 new LeaderboardRowDTO{
-                    ClientId = Guid.NewGuid(),
-                    Rating = 2
-                },
-                new LeaderboardRowDTO {
-                    ClientId = Guid.NewGuid(),
-                    Rating = 2
-                },
-                new LeaderboardRowDTO {
-                    ClientId = Guid.NewGuid(),
-                    Rating = 3
-                }
-            }));
+                    ClientId = clientId,
+                    Rating = 2,
+                    LeaderboardId = 1
+                }));
 
             var adminController = new AdminController(leaderboardService.Object);
 
