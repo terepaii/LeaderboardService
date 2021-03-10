@@ -20,7 +20,8 @@ namespace Test
             var row = new LeaderboardRowDTO
             {
                 ClientId = Guid.NewGuid(),
-                Rating = 1
+                Rating = 1,
+                LeaderboardId = 1
             };
             var result = Validator.TryValidateObject(row, new ValidationContext(row), null, true);
 
@@ -33,7 +34,8 @@ namespace Test
             var row = new LeaderboardRowDTO
             {
                 ClientId = Guid.NewGuid(),
-                Rating = -1
+                Rating = -1,
+                LeaderboardId = 1
             };
             var result = Validator.TryValidateObject(row, new ValidationContext(row), null, true);
 
@@ -43,86 +45,93 @@ namespace Test
         // TODO: Validate Guid Leaderboard Row Test
 
         [Fact]
-        public void GetAllLeaderboardRowsTest()
+        public void GetRowTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
-            leaderboardService.Setup(m => m.Get(null)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()
-            {
-                new LeaderboardRowDTO{
-                    ClientId = Guid.NewGuid(),
-                    Rating = 2
-                },
-                new LeaderboardRowDTO {
-                    ClientId = Guid.NewGuid(),
-                    Rating = 2
-                },
-                new LeaderboardRowDTO {
-                    ClientId = Guid.NewGuid(),
-                    Rating = 3
-                }
-            }));
+            var clientId = Guid.NewGuid();
+            long rating = 1;
+            short leaderboardId = 1;
+            var expectedResult = new LeaderboardRowDTO{
+                    ClientId = clientId,
+                    Rating = rating,
+                    LeaderboardId = leaderboardId
+                };
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult(expectedResult));
 
             var clientController = new ClientController(leaderboardService.Object);
 
-            var result = clientController.GetAllRows().Result.Value;
-            Assert.Equal(result.Count, 3);
+            var result = clientController.Get(clientId, leaderboardId).Result.Value;
+            Assert.True(AssertRowEqual(result, expectedResult));
         }
 
         [Fact]
-        public void GetAllLeaderboardRowsEmptyTest()
+        public void GetRowEmptyTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
-            leaderboardService.Setup(m => m.Get(null)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()));
+            var clientId = Guid.NewGuid();
+            short leaderboardId = 1;
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult((LeaderboardRowDTO)null));
 
             var clientController = new ClientController(leaderboardService.Object);
 
-            var result = clientController.GetAllRows().Result.Result;
+            var result = clientController.Get(clientId, leaderboardId).Result.Result;
             Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
-        public void GetLeaderboardRowTest()
+        public void GetRowsPaginatedTest()
         {
-            var clientId = Guid.NewGuid();
             var leaderboardService = new Mock<ILeaderboardService>();
-            leaderboardService.Setup(m => m.Get(clientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()
+            
+            short leaderboardId = 1;
+            int offset = 0;
+            int limit = 2;
+            leaderboardService.Setup(m => m.GetRowsPaginated(leaderboardId, offset, limit)).Returns(Task.FromResult(new List<LeaderboardRowDTO>()
             {
                 new LeaderboardRowDTO{
-                    ClientId = clientId,
-                    Rating = 2
+                    ClientId = Guid.NewGuid(),
+                    Rating = 2,
+                    LeaderboardId = leaderboardId
+                },
+                new LeaderboardRowDTO{
+                    ClientId = Guid.NewGuid(),
+                    Rating = 1,
+                    LeaderboardId = leaderboardId
                 }
             }));
 
             var clientController = new ClientController(leaderboardService.Object);
 
-            var result = clientController.GetRow(clientId).Result.Value;
-            Assert.Equal(result.Count, 1);
-            Assert.True(result.Exists(p => p.ClientId == clientId));
+            var result = clientController.GetRowsPaginated(leaderboardId, offset, limit).Result.Value;
+            Assert.Equal(result.Count, 2);
+            Assert.True(result.TrueForAll(p => p.LeaderboardId == leaderboardId));
         }
 
         [Fact]
         public void GetLeaderboardRowClientDoesNotExistTest()
         {
-            var clientId = Guid.NewGuid();
             var leaderboardService = new Mock<ILeaderboardService>();
-            leaderboardService.Setup(m => m.Get(clientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>() { /*Empty List*/ }));
+            var clientId = Guid.NewGuid();
+            short leaderboardId = 1;
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult((LeaderboardRowDTO)null));
 
             var clientController = new ClientController(leaderboardService.Object);
 
-            var result = clientController.GetRow(clientId).Result.Result;
+            var result = clientController.Get(clientId, leaderboardId).Result.Result;
             Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
-        public void PostLeaderboardRowTest()
+        public void PostRowTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
             var row = new LeaderboardRowDTO
             {
                 ClientId = Guid.NewGuid(),
-                Rating = 1
+                Rating = 1,
+                LeaderboardId = 1
             };
-            leaderboardService.Setup(m => m.Get(row.ClientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ /*Empty List*/}));
+            leaderboardService.Setup(m => m.Get(row.ClientId, row.LeaderboardId)).Returns(Task.FromResult((LeaderboardRowDTO)null));
             leaderboardService.Setup(m => m.Create(row)).Returns(Task.CompletedTask);
 
             var clientController = new ClientController(leaderboardService.Object);
@@ -130,23 +139,24 @@ namespace Test
             var postResult = clientController.Post(row).Result;
             Assert.IsType<OkResult>(postResult);
 
-            leaderboardService.Setup(m => m.Get(row.ClientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ row }));
+            // Assert the result is there
+            leaderboardService.Setup(m => m.Get(row.ClientId, row.LeaderboardId)).Returns(Task.FromResult( row ));
 
-            var getResult = clientController.GetRow(row.ClientId).Result.Value;
-            Assert.Equal(getResult.Count, 1);
-            Assert.True(getResult.Exists(p => p.ClientId == row.ClientId));
+            var getResult = clientController.Get(row.ClientId, row.LeaderboardId).Result.Value;
+            Assert.True(AssertRowEqual(row, getResult));
         }
 
         [Fact]
-        public void PostLeaderboardRowAlreadyExistsTest()
+        public void PostRowAlreadyExistsTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
             var row = new LeaderboardRowDTO
             {
                 ClientId = Guid.NewGuid(),
-                Rating = 1
+                Rating = 1,
+                LeaderboardId = 1
             };
-            leaderboardService.Setup(m => m.Get(row.ClientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ row }));
+            leaderboardService.Setup(m => m.Get(row.ClientId, row.LeaderboardId)).Returns(Task.FromResult( row ));
 
             var clientController = new ClientController(leaderboardService.Object);
 
@@ -162,15 +172,17 @@ namespace Test
             var existingRow = new LeaderboardRowDTO
             {
                 ClientId = clientId,
-                Rating = 1
+                Rating = 1,
+                LeaderboardId = 1
             };
             var row = new LeaderboardRowDTO
             {
                 ClientId = clientId,
-                Rating = 2
+                Rating = 2,
+                LeaderboardId = 1
             };
 
-            leaderboardService.Setup(m => m.Get(row.ClientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ existingRow }));
+            leaderboardService.Setup(m => m.Get(existingRow.ClientId, existingRow.LeaderboardId)).Returns(Task.FromResult( existingRow ));
             leaderboardService.Setup(m => m.Update(row)).Returns(Task.CompletedTask);
 
             var clientController = new ClientController(leaderboardService.Object);
@@ -180,16 +192,17 @@ namespace Test
         }
 
         [Fact]
-        public void UpdateLeaderboardRowDoesNotExistTest()
+        public void UpdateRowDoesNotExistTest()
         {
             var leaderboardService = new Mock<ILeaderboardService>();
             var row = new LeaderboardRowDTO
             {
                 ClientId = Guid.NewGuid(),
-                Rating = 2
+                Rating = 2,
+                LeaderboardId = 1
             };
 
-            leaderboardService.Setup(m => m.Get(row.ClientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){  }));
+            leaderboardService.Setup(m => m.Get(row.ClientId, row.LeaderboardId)).Returns(Task.FromResult((LeaderboardRowDTO)null));
 
             var clientController = new ClientController(leaderboardService.Object);
             
@@ -203,18 +216,20 @@ namespace Test
             var leaderboardService = new Mock<ILeaderboardService>();
 
             var clientId = Guid.NewGuid();
-            leaderboardService.Setup(m => m.Get(clientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ 
+            short leaderboardId = 1;
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult(
                 new LeaderboardRowDTO
                 {
                     ClientId = clientId,
-                    Rating = 1
+                    Rating = 1,
+                    LeaderboardId = leaderboardId
                 }
-             }));
-             leaderboardService.Setup(m => m.Delete(clientId)).Returns(Task.CompletedTask);
+             ));
+             leaderboardService.Setup(m => m.Delete(clientId, leaderboardId)).Returns(Task.CompletedTask);
 
             var clientController = new ClientController(leaderboardService.Object);
             
-            var result = clientController.Delete(clientId).Result;
+            var result = clientController.Delete(clientId, leaderboardId).Result;
             Assert.IsType<OkResult>(result);
         }
 
@@ -224,12 +239,20 @@ namespace Test
             var leaderboardService = new Mock<ILeaderboardService>();
 
             var clientId = Guid.NewGuid();
-            leaderboardService.Setup(m => m.Get(clientId)).Returns(Task.FromResult(new List<LeaderboardRowDTO>(){ /* Empty List*/ }));
+            short leaderboardId = 1;
+            leaderboardService.Setup(m => m.Get(clientId, leaderboardId)).Returns(Task.FromResult((LeaderboardRowDTO)null));
 
             var clientController = new ClientController(leaderboardService.Object);
             
-            var result = clientController.Delete(clientId).Result;
+            var result = clientController.Delete(clientId, leaderboardId).Result;
             Assert.IsType<NotFoundResult>(result);
+        }
+
+        private bool AssertRowEqual(LeaderboardRowDTO rowA, LeaderboardRowDTO rowB)
+        {
+            return rowA.ClientId == rowB.ClientId && 
+                   rowA.Rating == rowB.Rating &&
+                   rowA.LeaderboardId == rowB.LeaderboardId; 
         }
     }
 }

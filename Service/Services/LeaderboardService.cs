@@ -15,9 +15,14 @@ namespace LeaderboardAPI.Services
             _data = data;
         }
 
-        public async Task<List<LeaderboardRowDTO>> Get(Guid? clientId)
+        public async Task<LeaderboardRowDTO> Get(Guid clientId, short leaderboardId)
         {
-            return await _data.Get(clientId);
+            return await _data.Get(clientId, leaderboardId);
+        }
+
+        public async Task<List<LeaderboardRowDTO>> GetRowsPaginated(short leaderboardId, int offset, int limit)
+        {
+            return await _data.GetRowsPaginated(leaderboardId, offset, limit);
         }
 
         public async Task Create(LeaderboardRowDTO rowIn)
@@ -35,9 +40,9 @@ namespace LeaderboardAPI.Services
             await _data.Delete(rowIn);
         }
 
-        public async Task Delete(Guid clientId)
+        public async Task Delete(Guid clientId, short leaderboardId)
         {
-            await _data.Delete(clientId);
+            await _data.Delete(clientId, leaderboardId);
         }
 
         public async Task DeleteAll()

@@ -2,7 +2,9 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 using LeaderboardAPI.Interfaces;
 using LeaderboardAPI.Models;
@@ -20,41 +22,58 @@ namespace LeaderboardAPI.Data
             var database = client.GetDatabase(_settings.DatabaseName);
             _rows = database.GetCollection<LeaderboardRowMongoDB>(_settings.LeaderboardCollectionName);
 
-            var _key = Builders<LeaderboardRowMongoDB>.IndexKeys.Descending("Rating");
+            var _key = Builders<LeaderboardRowMongoDB>.IndexKeys.Combine(
+                Builders<LeaderboardRowMongoDB>.IndexKeys.Ascending("LeaderboardId"),
+                Builders<LeaderboardRowMongoDB>.IndexKeys.Descending("Rating")
+            );
             _rows.Indexes.CreateOne(new CreateIndexModel<LeaderboardRowMongoDB>(_key));
         }
 
-        public async Task<List<LeaderboardRowDTO>> Get(Guid? clientId)
+        public async Task<LeaderboardRowDTO> Get(Guid clientId, short leaderboardId)
         {
-            List<LeaderboardRowDTO> rows = new List<LeaderboardRowDTO>();
 
-            var filter = clientId == null ?                                                  // Is the client id null?
-                         Builders<LeaderboardRowMongoDB>.Filter.Empty :                      // If so, create a filter to retrieve all documents
-                         Builders<LeaderboardRowMongoDB>.Filter.Eq("ClientId", clientId);    // If not, look for a particular document with the client id
+            var filter = Builders<LeaderboardRowMongoDB>.Filter.And(
+                         Builders<LeaderboardRowMongoDB>.Filter.Eq("LeaderboardId", leaderboardId),
+                         Builders<LeaderboardRowMongoDB>.Filter.Eq("ClientId", clientId)
+            );
 
-            
-            // Always return results sorted in descending order
-            var sortOption = new FindOptions<LeaderboardRowMongoDB>
+            var row = new LeaderboardRowMongoDB(new LeaderboardRowDTO());
+            try 
             {
-                Sort = Builders<LeaderboardRowMongoDB>.Sort.Descending("Rating")
-            };
-
-            using (var cursor = await _rows.FindAsync(filter, sortOption))
-            {
-                while (await cursor.MoveNextAsync())
-                {
-                    var batch = cursor.Current;
-                    foreach (LeaderboardRowMongoDB row in batch)
-                    {
-                        rows.Add(new LeaderboardRowDTO
-                        {
-                            ClientId = row.ClientId,
-                            Rating = row.Rating
-                        });
-                    }
-                }
+                row = await _rows.Find(filter).SingleAsync();
             }
-            return rows;   
+            catch (Exception e)
+            {
+                Log.Information(e.Message);
+                return null;
+            }
+            return row.ToLeaderboardRowDTO();
+        }
+
+        public async Task<List<LeaderboardRowDTO>> GetRowsPaginated(short leaderboardId, int offset, int limit)
+        {
+            // With help from Kevin Smith at https://kevsoft.net/2020/01/27/paging-data-in-mongodb-with-csharp.html          
+            var filter = Builders<LeaderboardRowMongoDB>.Filter.Eq("LeaderboardId", leaderboardId);
+
+            var dataFacet = AggregateFacet.Create("Data",
+                PipelineDefinition<LeaderboardRowMongoDB, LeaderboardRowMongoDB>.Create(
+                    new[]
+                    {
+                        PipelineStageDefinitionBuilder.Sort(Builders<LeaderboardRowMongoDB>.Sort.Descending(row => row.Rating)),
+                        PipelineStageDefinitionBuilder.Skip<LeaderboardRowMongoDB>(offset),
+                        PipelineStageDefinitionBuilder.Limit<LeaderboardRowMongoDB>(limit),
+                    }));
+
+            var aggregate = await _rows.Aggregate()
+                .Match(filter)
+                .Facet(dataFacet)
+                .ToListAsync();
+
+            var data = aggregate.First()
+                .Facets.First(x => x.Name == "Data")
+                .Output<LeaderboardRowMongoDB>();
+            
+            return data.Select(x => x.ToLeaderboardRowDTO()).ToList();
         }
 
         public async Task Create(LeaderboardRowDTO rowIn)
@@ -71,12 +90,20 @@ namespace LeaderboardAPI.Data
 
         public async Task Delete(LeaderboardRowDTO rowIn)
         {
-            await _rows.DeleteOneAsync(row => row.ClientId == rowIn.ClientId);
+            var filter = Builders<LeaderboardRowMongoDB>.Filter.And(
+                Builders<LeaderboardRowMongoDB>.Filter.Eq("LeaderboardId", rowIn.LeaderboardId),
+                Builders<LeaderboardRowMongoDB>.Filter.Eq("ClientId", rowIn.ClientId)
+            );
+            await _rows.DeleteOneAsync(filter);
         }
 
-        public async Task Delete(Guid clientId)
+        public async Task Delete(Guid clientId, short leaderboardId)
         {
-            await _rows.DeleteOneAsync(row => row.ClientId.Equals(clientId));
+            var filter = Builders<LeaderboardRowMongoDB>.Filter.And(
+                Builders<LeaderboardRowMongoDB>.Filter.Eq("LeaderboardId", leaderboardId),
+                Builders<LeaderboardRowMongoDB>.Filter.Eq("ClientId", clientId)
+            );
+            await _rows.DeleteOneAsync(filter);
         }
 
         public async Task DeleteAll()

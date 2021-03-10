@@ -22,10 +22,25 @@ namespace LeaderboardAPI.Models
         [JsonProperty("Rating")]
         public long Rating {get; set;}
 
+        [Required]
+        [BsonElement("LeaderboardId")]
+        [JsonProperty("LeaderboardId")]
+        public short LeaderboardId {get; set;}
+
         public LeaderboardRowMongoDB(LeaderboardRowDTO rowIn)
         {
             ClientId = rowIn.ClientId;
             Rating = rowIn.Rating;
+            LeaderboardId = rowIn.LeaderboardId;
+        }
+
+        public LeaderboardRowDTO ToLeaderboardRowDTO()
+        {
+            return new LeaderboardRowDTO {
+                ClientId = this.ClientId,
+                Rating = this.Rating,
+                LeaderboardId = this.LeaderboardId
+            };
         }
     }
 }

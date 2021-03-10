@@ -15,6 +15,8 @@ namespace LeaderboardClient
 
         public long Rating {get; set;}
 
+        public short LeaderboardId {get; set;}
+
     }
     class Program
     {
@@ -30,24 +32,24 @@ namespace LeaderboardClient
             return response.Headers.Location;
         }
 
-        static async Task<List<Row>> GetRow(Guid ClientId)
+        static async Task<Row> GetRow(Guid clientId, short leaderboardId)
         {
-            List<Row> row = null;
+            Row row = null;
 
-            HttpResponseMessage response = await client.GetAsync(client.BaseAddress + $"/{ClientId}"); 
+            HttpResponseMessage response = await client.GetAsync(client.BaseAddress + $"/{clientId}/{leaderboardId}"); 
 
             if (response.IsSuccessStatusCode)
             {
                 var jsonString = await response.Content.ReadAsStringAsync();
-                row = JsonSerializer.Deserialize<List<Row>>(jsonString);
+                row = JsonSerializer.Deserialize<Row>(jsonString);
             }
             return row;
         }
-        static async Task<List<Row>> GetRows()
+        static async Task<List<Row>> GetRowsPaginated(short leaderboardId, int offset=0, int limit=10)
         {
             List<Row> stats = null;
 
-            HttpResponseMessage response = await client.GetAsync("");
+            HttpResponseMessage response = await client.GetAsync(client.BaseAddress + $"/{leaderboardId}?offset={offset}&limit={limit}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -70,9 +72,9 @@ namespace LeaderboardClient
             return false;
         }
 
-        static async Task<bool> Delete(Guid clientId)
+        static async Task<bool> Delete(Guid clientId, short leaderboardId)
         {
-            HttpResponseMessage response = await client.DeleteAsync(client.BaseAddress + $"/{clientId}");
+            HttpResponseMessage response = await client.DeleteAsync(client.BaseAddress + $"/{clientId}/{leaderboardId}");
 
             if(response.IsSuccessStatusCode)
             {
@@ -116,13 +118,14 @@ namespace LeaderboardClient
             Row row = new Row
             {
                 ClientId = Guid.NewGuid(),
-                Rating = GenerateRandomNDigitNumber(5)
+                Rating = GenerateRandomNDigitNumber(5),
+                LeaderboardId = (short)GenerateRandomNDigitNumber(2)
             };
 
             // Create
             try
             {
-               Console.WriteLine($"Creating a new row from client {row.ClientId} with Rating {row.Rating}");
+               Console.WriteLine($"Creating a new row from client {row.ClientId} with Rating {row.Rating} on leaderboard {row.LeaderboardId}");
                var uri = await CreateRow(row);
             }
             catch (Exception e)
@@ -133,9 +136,9 @@ namespace LeaderboardClient
             // Read one
             try
             {
-               Console.WriteLine($"Retrieving the new row from client {row.ClientId}");
-               var retrievedRow = await GetRow(row.ClientId);
-               ShowRows(retrievedRow);
+               Console.WriteLine($"Retrieving the new row from client {row.ClientId} on leaderboard [{row.LeaderboardId}]");
+               var retrievedRow = await GetRow(row.ClientId, row.LeaderboardId);
+               ShowRows(new List<Row> {retrievedRow});
             }
             catch (Exception e)
             {
@@ -146,7 +149,7 @@ namespace LeaderboardClient
             try 
             {
                Console.WriteLine("Getting all rows available");
-               var retrievedRows = await GetRows();
+               var retrievedRows = await GetRowsPaginated(row.LeaderboardId);
                ShowRows(retrievedRows); 
             }
             catch (Exception e)
@@ -160,19 +163,20 @@ namespace LeaderboardClient
                 Row updatedRow = new Row
                 {
                     ClientId = row.ClientId, 
-                    Rating = GenerateRandomNDigitNumber(5)
+                    Rating = GenerateRandomNDigitNumber(5),
+                    LeaderboardId = row.LeaderboardId
                 };
 
-                Console.WriteLine($"Trying to update rating  of client [{row.ClientId}] from [{row.Rating}] to [{updatedRow.Rating}]");
+                Console.WriteLine($"Trying to update rating  of client [{row.ClientId}] from [{row.Rating}] to [{updatedRow.Rating}] on leaderboard [{row.LeaderboardId}]");
                 var updated = await Update(row.ClientId, updatedRow);
 
                 if (updated)
                 {
-                    Console.WriteLine($"Successfully updated row for client [{row.ClientId}]");
+                    Console.WriteLine($"Successfully updated row for client [{row.ClientId}] on leaderboard [{row.LeaderboardId}]");
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to updated row for client [{row.ClientId}]");
+                    Console.WriteLine($"Failed to updated row for client [{row.ClientId}] on leaderboard [{row.LeaderboardId}]");
                 }
             }
             catch (Exception e)
@@ -183,15 +187,15 @@ namespace LeaderboardClient
             //Delete
             try
             {
-                Console.WriteLine($"Trying to delete row for client [{row.ClientId}]");
-                var deleted = await Delete(row.ClientId);
+                Console.WriteLine($"Trying to delete row for client [{row.ClientId}] on leaderboard [{row.LeaderboardId}]");
+                var deleted = await Delete(row.ClientId, row.LeaderboardId);
                 if (deleted)
                 {
-                    Console.WriteLine($"Successfully deleted row for client [{row.ClientId}]");
+                    Console.WriteLine($"Successfully deleted row for client [{row.ClientId}] on leaderboard [{row.LeaderboardId}]");
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to delete row for client [{row.ClientId}]");
+                    Console.WriteLine($"Failed to delete row for client [{row.ClientId}] on leaderboard [{row.LeaderboardId}]");
                 }
             }
             catch (Exception e)
