@@ -47,18 +47,17 @@ To start the ELK stack, use the `docker-compose up` in the `docker-elk` submodul
 * ~~Standardise API controllers~~
 * ~~Change to async functions on server~~
 * ~~MongoDB dockerfile~~
-* Authentication (Separate Service)
+* ~~Authentication (Separate Service)~~
+* Leaderboard Service validating JWT tokens
 * ~~ELK stack~~
 * ~~Metrics~~
 * ~~Indexes~~
-* Connection Pooling
 * Add startup script
-* Write to Specific Leaderboard per request
+* ~~Write to Specific Leaderboard per request~~
 * ~~Interfaces~~
 * ~~DI~~
-* Redis backend
 * ~~Add Unit Tests~~
 * Integration Tests
-* Loadtesting
+* ~~Loadtesting~~
 * Authentication to mongo
 * Terminating Proxy
