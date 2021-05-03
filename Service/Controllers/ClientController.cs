@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -5,12 +6,12 @@ using System.Threading.Tasks;
 using Serilog;
 
 using LeaderboardAPI.Interfaces;
-using static Utility;
 
 namespace LeaderboardAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ClientController : ControllerBase
     {
         private readonly ILeaderboardService _leaderboardService;
