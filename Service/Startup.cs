@@ -1,18 +1,21 @@
+using dotenv.net;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Prometheus;
-using System.Collections.Generic;
+using System.Text;
 
 using LeaderboardAPI.Data;
 using LeaderboardAPI.Interfaces;
 using LeaderboardAPI.Models;
 using LeaderboardAPI.Services;
-
+using Microsoft.AspNetCore.Identity;
 
 namespace LeaderboardAPI
 {
@@ -45,6 +48,39 @@ namespace LeaderboardAPI
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "LeaderboardApi", Version = "v1" });
             });
+
+            // Load in the .env file
+            var envVars = DotEnv.Fluent()
+                .WithoutExceptions()
+                .WithEnvFiles()
+                .WithoutTrimValues()
+                .Read();            
+            
+            services.AddAuthentication(config => {
+                config.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                config.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(jwt => 
+            {
+                // Usually would be read from a secret store
+                var sharedKey  = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+                envVars["SECRET_KEY"]
+                ));
+                jwt.RequireHttpsMetadata = false;
+                jwt.SaveToken = true;
+                jwt.TokenValidationParameters = new TokenValidationParameters 
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = sharedKey,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    // Should only be used in Dev
+                    RequireExpirationTime = false,
+                    ValidateLifetime = false
+                };
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,6 +113,10 @@ namespace LeaderboardAPI
             // Use the Prometheus middleware
             app.UseMetricServer();
             app.UseHttpMetrics();
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
